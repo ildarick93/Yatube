@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}Follow{% endblock %}
+{% block header %}Follow{% endblock %}
+{% block content %}
+
+    {% include "include/menu.html" with index=True %}
+
+        {% for post in page %}
+            {% include "include/post_card.html" with post=post %}
+            {% if not forloop.last %}<hr>{% endif %}
+        {% endfor %}
+
+
+    {% if page.has_other_pages %}
+        {% include "include/paginator.html" with paginator=paginator %}
+    {% endif %}
+
+{% endblock %}
