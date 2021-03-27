@@ -6,7 +6,7 @@ from django.views.generic.base import TemplateView
 from yatube import settings
 
 from .forms import CommentForm, PostForm
-from .models import Group, Post, User, Follow
+from .models import Follow, Group, Post, User
 
 
 def index(request):
@@ -74,6 +74,7 @@ def profile(request, username):
         "form": form,
         "followers_count": followers_count,
         "following_count": following_count,
+        "following": following,
     }
     return render(request, 'profile.html', context)
 
@@ -146,8 +147,7 @@ def profile_follow(request, username):
     user = request.user
     author = get_object_or_404(User, username=username)
     if author != user:
-        pass
-        # Follow.objects.get
+        Follow.objects.get_or_create(author=author, user=user)
     return redirect('profile', username=username)
 
 
@@ -157,7 +157,7 @@ def profile_unfollow(request, username):
     user = request.user
     author = get_object_or_404(User, username=username)
     if author != user:
-        pass
+        Follow.objects.filter(author=author, user=user).delete()
     return redirect('profile', username=username)
 
 
