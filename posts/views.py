@@ -51,29 +51,29 @@ def new_post(request):
 
 def profile(request, username):
 
-    user = get_object_or_404(User, username=username)
-    users_post = user.posts.all()
-    users_post_count = users_post.count()
+    profile = get_object_or_404(User, username=username)
+    profile_post = profile.posts.all()
+    profile_post_count = profile_post.count()
     current_user = request.user
     form = CommentForm()
     followers_count = Follow.objects.filter(author__username=username).count()
     following_count = Follow.objects.filter(user__username=username).count()
 
     following = False
-    if request.user.is_authenticated:
-        author = User.objects.get(username=user.username)
-        following = request.user.follower.filter(author=author).exists()
+    if current_user.is_authenticated and current_user != profile:
+        author = User.objects.get(username=profile.username)
+        following = current_user.follower.filter(author=author).exists()
 
-    paginator = Paginator(users_post, settings.POST_PER_PAGE)
+    paginator = Paginator(profile_post, settings.POST_PER_PAGE)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
 
     context = {
-        "profile": user,
+        "profile": profile,
         "page": page,
         "current_user": current_user,
         "paginator": paginator,
-        "count": users_post_count,
+        "count": profile_post_count,
         "form": form,
         "followers_count": followers_count,
         "following_count": following_count,

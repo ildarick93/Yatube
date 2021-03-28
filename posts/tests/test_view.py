@@ -160,9 +160,10 @@ class PostViewTests(TestCase):
     def test_follow_unfollow_feauture(self):
         """Авторизованный пользователь может подписываться на других
         пользователей и удалять их из подписок."""
-        # response = self.authorized_client.get(reverse('follow', kwargs={
-        #     'username': self.user.username,
-        # }))
+        # авторизованный
+        kwargs = {'username': self.user.username, }
+        auth_client = self.authorized_client
+        response = auth_client.get(reverse('profile_follow', kwargs=kwargs))
         author = self.following
         user = self.user
         # подписка
@@ -176,10 +177,16 @@ class PostViewTests(TestCase):
         followers_count = followers.count()
         self.assertEqual(followers_count, 0, 'Не работает отписка')
 
-        # response = self.guest_client.get(reverse('follow', kwargs={
-        #     'username': self.user.username,
-        # }))
-        # author = self.user
+        # неавторизованный
+        guest_client = self.guest_client
+        response = guest_client.get(reverse('profile_follow', kwargs=kwargs))
+        author = self.user
+        author = self.following
+        Follow.objects.create(author=author, user=user)
+        followers = Follow.objects.filter(author=author).all()
+        followers_count = followers.count()
+        error_message = 'Неавторизованный клиент смог подписаться'
+        self.assertEqual(followers_count, 0, error_message)
 
     def test_profile_shows_new_post(self):
         """Новая запись пользователя появляется в ленте тех, кто на него
