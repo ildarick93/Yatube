@@ -49,6 +49,11 @@ def new_post(request):
     return render(request, 'new.html', {"form": form})
 
 
+def is_follower(user, author_username):
+    author = User.objects.get(username=author_username)
+    return user.follower.filter(author=author).exists
+
+
 def profile(request, username):
 
     user = get_object_or_404(User, username=username)
@@ -56,10 +61,12 @@ def profile(request, username):
     users_post_count = users_post.count()
     current_user = request.user
     form = CommentForm()
-    followers = Follow.objects.filter(author__username=username).all()
-    followers_count = followers.count()
-    following = Follow.objects.filter(user__username=username).all()
-    following_count = following.count()
+    followers_count = Follow.objects.filter(author__username=username).count()
+    following_count = Follow.objects.filter(user__username=username).count()
+
+    following = False
+    if request.user.is_authenticated:
+        following = is_follower(request.user, user.username)
 
     paginator = Paginator(users_post, settings.POST_PER_PAGE)
     page_number = request.GET.get('page')
@@ -147,7 +154,7 @@ def profile_follow(request, username):
 
     user = request.user
     author = get_object_or_404(User, username=username)
-    if author != user:
+    if not author.following.filter(user=user):
         Follow.objects.create(author=author, user=user)
     return redirect('profile', username=username)
 
@@ -157,7 +164,7 @@ def profile_unfollow(request, username):
 
     user = request.user
     author = get_object_or_404(User, username=username)
-    if author != user:
+    if author.following.filter(user=user):
         Follow.objects.filter(author=author, user=user).delete()
     return redirect('profile', username=username)
 
