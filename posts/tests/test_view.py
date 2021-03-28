@@ -3,7 +3,7 @@ from django.core.cache import cache
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from posts.models import Group, Post, User
+from posts.models import Comment, Follow, Group, Post, User
 
 # from .templates.index import cache
 
@@ -14,8 +14,7 @@ class PostViewTests(TestCase):
         super().setUpClass()
 
         cls.user = User.objects.create(username='username')
-        # cls.follower = User.objects.create(username='follower')
-        # cls.not_follower = User.objects.create(username='not_follower')
+        cls.following = User.objects.create(username='following')
 
         cls.group = Group.objects.create(
             title='Заголовок',
@@ -34,11 +33,18 @@ class PostViewTests(TestCase):
             group=cls.group,
             author=cls.user,
         )
+        cls.comment = Comment.objects.create(
+            post=cls.post,
+            author=cls.user,
+            text='Комментарий',
+        )
 
     def setUp(self):
         self.guest_client = Client()
         self.authorized_client = Client()
+#        self.another_authorized_client = Client()
         self.authorized_client.force_login(self.user)
+#        self.another_authorized_client.force_login(self.following)
 
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -154,25 +160,51 @@ class PostViewTests(TestCase):
     def test_follow_unfollow_feauture(self):
         """Авторизованный пользователь может подписываться на других
         пользователей и удалять их из подписок."""
-        # response = self.guest_client.get(reverse('profile'))
-        # response = self.authorized_client.get(reverse('profile'))
-
+        # response = self.authorized_client.get(reverse('follow', kwargs={
+        #     'username': self.user.username,
+        # }))
+        author = self.following
+        user = self.user
         # подписка
-        followers_count = user.count()
+        Follow.objects.create(author=author, user=user)
+        followers = Follow.objects.filter(author=author).all()
+        followers_count = followers.count()
         self.assertEqual(followers_count, 1, 'Не работает подписка')
-
         # отписка
-        followers_count = user.count()
+        Follow.objects.filter(author=author, user=user).delete()
+        followers = Follow.objects.filter(author=author).all()
+        followers_count = followers.count()
         self.assertEqual(followers_count, 0, 'Не работает отписка')
+
+        # response = self.guest_client.get(reverse('follow', kwargs={
+        #     'username': self.user.username,
+        # }))
+        # author = self.user
 
     def test_profile_shows_new_post(self):
         """Новая запись пользователя появляется в ленте тех, кто на него
         подписан и не появляется в ленте тех, кто не подписан на него."""
-        pass
+        author = self.following
+        user = self.user
+        Follow.objects.get_or_create(author=author, user=user)
+        post = Post.objects.create(text='Новый пост', author=author, )
+        response = self.guest_client.get(reverse('follow_index'))
+        self.assertEqual(response.context['page'][0], post)
+
+        # response.content
 
     def test_only_authorized_client_can_comment(self):
         """Только авторизированный пользователь может комментировать посты."""
-        pass
+        response = self.authorized_client.get(reverse('post'))
+        comments_count = response.comments  # Comment.objects.all()
+        self.assertEqual(comments_count, 1, 'Комментирование не работает')
+        Comment.objects.create(
+            post=self.post,
+            author=self.user,
+            text='Новый комментарий',
+            related_name='comments'
+        )
+        self.assertEqual(comments_count, 2, 'Комментирование не работает')
 
 
 class PaginatorViewsTest(TestCase):

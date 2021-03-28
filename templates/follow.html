@@ -3,7 +3,7 @@
 {% block header %}Follow{% endblock %}
 {% block content %}
 
-    {% include "include/menu.html" with index=True %}
+    {% include "include/menu.html" with follow=True %}
 
         {% for post in page %}
             {% include "include/post_card.html" with post=post %}
