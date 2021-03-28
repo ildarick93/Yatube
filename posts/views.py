@@ -49,11 +49,6 @@ def new_post(request):
     return render(request, 'new.html', {"form": form})
 
 
-def is_follower(user, author_username):
-    author = User.objects.get(username=author_username)
-    return user.follower.filter(author=author).exists
-
-
 def profile(request, username):
 
     user = get_object_or_404(User, username=username)
@@ -66,7 +61,8 @@ def profile(request, username):
 
     following = False
     if request.user.is_authenticated:
-        following = is_follower(request.user, user.username)
+        author = User.objects.get(username=user.username)
+        following = request.user.follower.filter(author=author).exists()
 
     paginator = Paginator(users_post, settings.POST_PER_PAGE)
     page_number = request.GET.get('page')
