@@ -13,8 +13,6 @@
         {% endfor %}
 {% endcache %} 
 
-    {% if page.has_other_pages %}
-        {% include "include/paginator.html" with paginator=paginator %}
-    {% endif %}
+    {% include "include/paginator.html" with paginator=paginator %}
 
 {% endblock %}
