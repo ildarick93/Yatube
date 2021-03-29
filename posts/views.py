@@ -16,7 +16,7 @@ def index(request):
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
     form = CommentForm()
-    context = {"page": page, "paginator": paginator, "form": form, }
+    context = {"page": page, "form": form, }    # "paginator": paginator,
     return render(request, 'index.html', context)
 
 
@@ -30,8 +30,7 @@ def group_posts(request, slug):
     form = CommentForm()
     context = {
         "group": group,
-        "page": page,
-        "paginator": paginator,
+        "page": page,  # "paginator": paginator,
         "form": form,
     }
     return render(request, 'group.html', context)
@@ -70,9 +69,8 @@ def profile(request, username):
 
     context = {
         "profile": profile,
-        "page": page,
+        "page": page,    # "paginator": paginator,
         "current_user": current_user,
-        "paginator": paginator,
         "count": profile_post_count,
         "form": form,
         "followers_count": followers_count,
