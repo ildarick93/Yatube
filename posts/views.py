@@ -121,6 +121,7 @@ def post_edit(request, username, post_id):
         request, "new.html", {"form": form, "post": post})
 
 
+@login_required
 def add_comment(request, username, post_id):
 
     post = get_object_or_404(Post, author__username=username, id=post_id)

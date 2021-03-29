@@ -70,6 +70,9 @@ class PostURLTests(TestCase):
         url_redirect_names = {
             '/new/': '/auth/login/?next=/new/',
             f'/{username}/{post_id}/edit/': f'/{username}/{post_id}/',
+            f'/{username}/follow/': f'/auth/login/?next=/{username}/follow/',
+            f'/{username}/unfollow/': f'/auth/login/?next=/{username}/unfollow/',
+            f'/{username}/{post_id}/comment/': f'/auth/login/?next=/{username}/{post_id}/comment/',
         }
         for url, redirect in url_redirect_names.items():
             with self.subTest(url=url):
