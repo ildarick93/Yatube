@@ -52,7 +52,7 @@ def new_post(request):
 def profile(request, username):
 
     profile = get_object_or_404(User, username=username)
-    profile_post = profile.posts.all()
+    profile_post = profile.posts.all().order_by('-pub_date')
     profile_post_count = profile_post.count()
     current_user = request.user
     form = CommentForm()
@@ -151,7 +151,7 @@ def profile_follow(request, username):
 
     user = request.user
     author = get_object_or_404(User, username=username)
-    if not author.following.filter(user=user):
+    if not author.following.filter(user=user) and author != user:
         Follow.objects.create(author=author, user=user)
     return redirect('profile', username=username)
 
@@ -161,7 +161,7 @@ def profile_unfollow(request, username):
 
     user = request.user
     author = get_object_or_404(User, username=username)
-    if author.following.filter(user=user):
+    if author.following.filter(user=user) and author != user:
         Follow.objects.filter(author=author, user=user).delete()
     return redirect('profile', username=username)
 

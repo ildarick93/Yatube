@@ -42,9 +42,9 @@ class PostViewTests(TestCase):
     def setUp(self):
         self.guest_client = Client()
         self.authorized_client = Client()
-#        self.another_authorized_client = Client()
+        self.another_authorized_client = Client()
         self.authorized_client.force_login(self.user)
-#        self.another_authorized_client.force_login(self.following)
+        self.another_authorized_client.force_login(self.following)
 
     def test_pages_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
@@ -174,16 +174,18 @@ class PostViewTests(TestCase):
         count = Follow.objects.filter(author=author, user=user).count()
         self.assertEqual(count, 0, 'Не работает отписка')
 
-    # def test_profile_shows_new_post(self):
-    #     """Новая запись пользователя появляется в ленте тех, кто на него
-    #     подписан и не появляется в ленте тех, кто не подписан на него."""
-    #     author = self.following
-    #     user = self.user
-    #     Follow.objects.get_or_create(author=author, user=user)
-    #     post = Post.objects.create(text='Новый пост', author=author, )
-    #     response = self.guest_client.get(reverse('follow_index'))
-    #     self.assertEqual(response.context['page'][0], post)
-        # response.content
+    def test_follow_page_shows_new_post(self):
+        """Новая запись пользователя появляется в ленте тех, кто на него
+        подписан и не появляется в ленте тех, кто не подписан на него."""
+        author = self.following
+        user = self.user
+        new_post = Post.objects.create(text='Новый пост', author=author, )
+        Follow.objects.create(author=author, user=user)
+        response = self.authorized_client.get(reverse('follow_index'))
+        self.assertEqual(len(response.context['page']), 1)
+        self.assertEqual(response.context['page'][0], new_post)
+        response = self.another_authorized_client.get(reverse('follow_index'))
+        self.assertEqual(len(response.context['page']), 0)
 
     def test_only_authorized_client_can_comment(self):
         """Только авторизированный пользователь может комментировать посты."""
