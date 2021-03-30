@@ -157,19 +157,24 @@ class PostViewTests(TestCase):
             'Кэширование не работает'
         )
 
-    def test_follow_unfollow_feauture(self):
+    def test_auth_user_can_follow(self):
         """Авторизованный пользователь может подписываться на других
-        пользователей и удалять их из подписок."""
+        пользователей."""
         author = self.following
         user = self.user
-        # подписка
         Follow.objects.create(author=author, user=user)
         follower = user.follower.filter(author=author)[0]
         following = author.following.filter(user=user)[0]
         self.assertEqual(follower, following, 'Не работает подписка')
         count = Follow.objects.filter(author=author, user=user).count()
         self.assertEqual(count, 1, 'Не работает подписка')
-        # отписка
+
+    def test_auth_user_can_unfollow(self):
+        """Авторизованный пользователь может отписываться от других
+        пользователей."""
+        author = self.following
+        user = self.user
+        Follow.objects.create(author=author, user=user)
         Follow.objects.filter(author=author, user=user).delete()
         count = Follow.objects.filter(author=author, user=user).count()
         self.assertEqual(count, 0, 'Не работает отписка')

@@ -69,7 +69,8 @@ class PostURLTests(TestCase):
         post_id = self.post.id
         url_redirect_names = {
             '/new/': '/auth/login/?next=/new/',
-            f'/{username}/{post_id}/edit/': f'/{username}/{post_id}/',
+            f'/{username}/{post_id}/edit/':
+            f'/auth/login/?next=/{username}/{post_id}/edit/',
             f'/{username}/follow/': f'/auth/login/?next=/{username}/follow/',
             f'/{username}/unfollow/':
             f'/auth/login/?next=/{username}/unfollow/',

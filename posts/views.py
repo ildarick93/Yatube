@@ -1,7 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
-from django.views.generic.base import TemplateView
 
 from yatube import settings
 
@@ -11,12 +10,12 @@ from .models import Follow, Group, Post, User
 
 def index(request):
 
-    post_list = Post.objects.all().order_by('-pub_date')
+    post_list = Post.objects.all()
     paginator = Paginator(post_list, settings.POST_PER_PAGE)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
     form = CommentForm()
-    context = {"page": page, "form": form, }    # "paginator": paginator,
+    context = {"page": page, "form": form, }
     return render(request, 'index.html', context)
 
 
@@ -30,7 +29,7 @@ def group_posts(request, slug):
     form = CommentForm()
     context = {
         "group": group,
-        "page": page,  # "paginator": paginator,
+        "page": page,
         "form": form,
     }
     return render(request, 'group.html', context)
@@ -51,17 +50,14 @@ def new_post(request):
 def profile(request, username):
 
     profile = get_object_or_404(User, username=username)
-    profile_post = profile.posts.all().order_by('-pub_date')
+    profile_post = profile.posts.all()
     profile_post_count = profile_post.count()
     current_user = request.user
     form = CommentForm()
-    followers_count = Follow.objects.filter(author__username=username).count()
-    following_count = Follow.objects.filter(user__username=username).count()
 
     following = False
     if current_user.is_authenticated and current_user != profile:
-        author = User.objects.get(username=profile.username)
-        following = current_user.follower.filter(author=author).exists()
+        following = current_user.follower.filter(author=profile).exists()
 
     paginator = Paginator(profile_post, settings.POST_PER_PAGE)
     page_number = request.GET.get('page')
@@ -69,12 +65,10 @@ def profile(request, username):
 
     context = {
         "profile": profile,
-        "page": page,    # "paginator": paginator,
+        "page": page,
         "current_user": current_user,
         "count": profile_post_count,
         "form": form,
-        "followers_count": followers_count,
-        "following_count": following_count,
         "following": following,
     }
     return render(request, 'profile.html', context)
@@ -99,7 +93,7 @@ def post_view(request, username, post_id):
     return render(request, 'post.html', context)
 
 
-# @login_required
+@login_required
 def post_edit(request, username, post_id):
 
     post = get_object_or_404(Post, id=post_id, author__username=username)
@@ -149,8 +143,8 @@ def profile_follow(request, username):
 
     user = request.user
     author = get_object_or_404(User, username=username)
-    if not author.following.filter(user=user) and author != user:
-        Follow.objects.create(author=author, user=user)
+    if author != user:
+        Follow.objects.get_or_create(author=author, user=user)
     return redirect('profile', username=username)
 
 
@@ -159,7 +153,7 @@ def profile_unfollow(request, username):
 
     user = request.user
     author = get_object_or_404(User, username=username)
-    if author.following.filter(user=user) and author != user:
+    if author.following.filter(user=user).exists() and author != user:
         Follow.objects.filter(author=author, user=user).delete()
     return redirect('profile', username=username)
 
@@ -172,14 +166,3 @@ def page_not_found(request, exception):
 
 def server_error(request):
     return render(request, "misc/500.html", status=500)
-
-
-class JustStaticPage(TemplateView):
-
-    template_name = 'just_page.html'
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['just_title'] = 'Очень простая страница'
-        context['just_text'] = 'На создание этой страницы у меня ушло 5 минут!'
-        return context
